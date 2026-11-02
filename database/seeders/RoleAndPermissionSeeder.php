@@ -30,48 +30,55 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // create roles and assign created permissions
-        $roleSuperAdmin = Role::create(['name' => 'Super Admin']);
-        $roleSuperAdmin->givePermissionTo(Permission::all());
+        $roleSuperAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
+        $roleSuperAdmin->syncPermissions(Permission::all());
 
-        $roleHRD = Role::create(['name' => 'HRD / Admin']);
-        $roleHRD->givePermissionTo([
+        $roleHRD = Role::firstOrCreate(['name' => 'HRD / Admin']);
+        $roleHRD->syncPermissions([
             'employee.view', 'employee.create', 'employee.update', 'employee.delete',
             'performance.view', 'performance.assess',
             'report.view',
         ]);
 
-        $roleGM = Role::create(['name' => 'General Manager']);
-        $roleGM->givePermissionTo([
+        $roleGM = Role::firstOrCreate(['name' => 'General Manager']);
+        $roleGM->syncPermissions([
             'project.view', 'task.view', 'performance.view', 'report.view',
         ]);
 
-        $roleHoD = Role::create(['name' => 'Head of Department']);
-        $roleHoD->givePermissionTo([
+        $roleHoD = Role::firstOrCreate(['name' => 'Head of Department']);
+        $roleHoD->syncPermissions([
             'project.view', 'project.create', 'project.update',
             'task.view', 'task.create', 'task.assign', 'task.update', 'task.comment', 'task.review',
             'performance.view', 'performance.assess',
         ]);
 
-        $roleSupervisor = Role::create(['name' => 'Supervisor']);
-        $roleSupervisor->givePermissionTo([
+        $roleSupervisor = Role::firstOrCreate(['name' => 'Supervisor']);
+        $roleSupervisor->syncPermissions([
             'task.view', 'task.create', 'task.assign', 'task.update', 'task.comment', 'task.review',
             'performance.view', 'performance.assess',
         ]);
 
-        $roleStaff = Role::create(['name' => 'Staff / Employee']);
-        $roleStaff->givePermissionTo([
+        $roleStaff = Role::firstOrCreate(['name' => 'Staff / Employee']);
+        $roleStaff->syncPermissions([
             'task.view', 'task.update', 'task.comment',
             'performance.view',
         ]);
 
-        $roleTrainee = Role::create(['name' => 'OJT / Trainee']);
-        $roleTrainee->givePermissionTo([
+        $roleTrainee = Role::firstOrCreate(['name' => 'OJT / Trainee']);
+        $roleTrainee->syncPermissions([
             'task.view', 'task.update', 'task.comment',
             'performance.view',
+        ]);
+
+        // Security role
+        $roleSecurity = Role::firstOrCreate(['name' => 'Security']);
+        $roleSecurity->syncPermissions([
+            'room.view', 'room.borrow', 'room.return.request', 'room.return.approve', 'room.manage',
+            'task.view', 'task.update', 'task.comment', 'performance.view',
         ]);
 
         // Create a default super admin user
@@ -80,8 +87,13 @@ class RoleAndPermissionSeeder extends Seeder
         ], [
             'name' => 'Super Administrator',
             'password' => Hash::make('password'),
+            'status' => 'approved',
         ]);
 
-        $admin->assignRole($roleSuperAdmin);
+        if (!$admin->hasRole('Super Admin')) {
+            $admin->assignRole($roleSuperAdmin);
+        }
+
+        $admin->ensureEmployeeProfile();
     }
 }

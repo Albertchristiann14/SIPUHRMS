@@ -14,9 +14,7 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (! $user->employee && ! $user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager'])) {
-            abort(403, 'Only employees can have tasks.');
-        }
+        $employee = $user->employee ?? $user->ensureEmployeeProfile();
 
         $query = Task::with([
             'project:id,name,status', 
@@ -29,14 +27,21 @@ class TaskController extends Controller
             'activities.employee.user:id,name'
         ]);
 
-        // "My Tasks" should only show tasks assigned to the user or created by the user,
-        // unless the user is Super Admin, General Manager, or HRD / Admin who has global hotel oversight.
+        // Access scope:
+        // Super Admin, General Manager, HRD / Admin see all hotel tasks.
+        // Supervisors & Head of Department see all tasks in their department or assigned to them.
+        // Other staff see assigned tasks, created tasks, or tasks in their department.
         if (! $user->hasAnyRole(['Super Admin', 'General Manager', 'HRD / Admin'])) {
-            $query->where(function ($q) use ($user) {
-                if ($user->employee) {
-                    $q->whereHas('assignees', function ($sq) use ($user) {
-                        $sq->where('employee_id', $user->employee->id);
+            $query->where(function ($q) use ($user, $employee) {
+                if ($employee) {
+                    $q->whereHas('assignees', function ($sq) use ($employee) {
+                        $sq->where('employee_id', $employee->id);
                     });
+                    if ($employee->department_id) {
+                        $q->orWhereHas('assignees', function ($sq) use ($employee) {
+                            $sq->where('department_id', $employee->department_id);
+                        });
+                    }
                 }
                 $q->orWhere('created_by', $user->id);
             });
@@ -69,9 +74,7 @@ class TaskController extends Controller
     public function kanban()
     {
         $user = Auth::user();
-        if (! $user->employee && ! $user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager'])) {
-            abort(403, 'Only employees can have tasks.');
-        }
+        $employee = $user->employee ?? $user->ensureEmployeeProfile();
 
         $query = Task::with([
             'project:id,name,status', 
@@ -84,12 +87,17 @@ class TaskController extends Controller
             'activities.employee.user:id,name'
         ]);
 
-        if (! $user->hasRole('Super Admin')) {
-            $query->where(function ($q) use ($user) {
-                if ($user->employee) {
-                    $q->whereHas('assignees', function ($sq) use ($user) {
-                        $sq->where('employee_id', $user->employee->id);
+        if (! $user->hasAnyRole(['Super Admin', 'General Manager', 'HRD / Admin'])) {
+            $query->where(function ($q) use ($user, $employee) {
+                if ($employee) {
+                    $q->whereHas('assignees', function ($sq) use ($employee) {
+                        $sq->where('employee_id', $employee->id);
                     });
+                    if ($employee->department_id) {
+                        $q->orWhereHas('assignees', function ($sq) use ($employee) {
+                            $sq->where('department_id', $employee->department_id);
+                        });
+                    }
                 }
                 $q->orWhere('created_by', $user->id);
             });
@@ -109,9 +117,7 @@ class TaskController extends Controller
     public function calendar(Request $request)
     {
         $user = Auth::user();
-        if (! $user->employee && ! $user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager'])) {
-            abort(403, 'Only employees can access the schedule calendar.');
-        }
+        $employee = $user->employee ?? $user->ensureEmployeeProfile();
 
         $query = Task::with([
             'project:id,name,status', 
@@ -138,14 +144,14 @@ class TaskController extends Controller
         // Super Admin, HRD / Admin, General Manager see all tasks.
         // Other roles see assigned tasks, created tasks, or tasks in their department.
         if (! $user->hasAnyRole(['Super Admin', 'HRD / Admin', 'General Manager'])) {
-            $query->where(function ($q) use ($user) {
-                if ($user->employee) {
-                    $q->whereHas('assignees', function ($sq) use ($user) {
-                        $sq->where('employee_id', $user->employee->id);
+            $query->where(function ($q) use ($user, $employee) {
+                if ($employee) {
+                    $q->whereHas('assignees', function ($sq) use ($employee) {
+                        $sq->where('employee_id', $employee->id);
                     });
-                    if ($user->employee->department_id) {
-                        $q->orWhereHas('assignees', function ($sq) use ($user) {
-                            $sq->where('department_id', $user->employee->department_id);
+                    if ($employee->department_id) {
+                        $q->orWhereHas('assignees', function ($sq) use ($employee) {
+                            $sq->where('department_id', $employee->department_id);
                         });
                     }
                 }
