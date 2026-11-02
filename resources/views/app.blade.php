@@ -9,7 +9,9 @@
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" content="#E31B23">
         <link rel="apple-touch-icon" href="/logo/logoswissbell.jpg">
+        @if(request()->isSecure() || request()->header('X-Forwarded-Proto') === 'https')
         <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+        @endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

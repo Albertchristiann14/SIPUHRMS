@@ -4,7 +4,7 @@ import { Head, router, Link, useForm } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
-export default function PayrollIndex({ periods, selectedPeriodId, payrolls, flash }: any) {
+export default function PayrollIndex({ periods = [], selectedPeriodId, payrolls = [], flash }: any) {
     const [showGenerate, setShowGenerate] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         month: new Date().getMonth() + 1,

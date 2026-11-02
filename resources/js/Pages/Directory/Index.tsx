@@ -2,7 +2,7 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 
-export default function DirectoryIndex({ employees, departments, filters }: any) {
+export default function DirectoryIndex({ employees = [], departments = [], filters = {} }: any) {
     const searchTimeoutRef = React.useRef<any>(null);
 
     const handleSearch = (e: any) => {
@@ -23,6 +23,8 @@ export default function DirectoryIndex({ employees, departments, filters }: any)
         router.get(route('directory.index'), { ...filters, department_id: e.target.value }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
+    const employeeList = Array.isArray(employees) ? employees : (employees?.data || []);
+
     return (
         <AuthenticatedLayout
             header={<h2 className="font-bold text-xl text-slate-900 tracking-tight">Swiss-Belinn Staff Directory</h2>}
@@ -39,7 +41,7 @@ export default function DirectoryIndex({ employees, departments, filters }: any)
                                 type="text"
                                 placeholder="Search employee name, ID number, email..."
                                 className="w-full rounded-xl border-slate-300 shadow-xs text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#E31B23] focus:ring-1 focus:ring-[#E31B23] pl-10 py-2.5"
-                                defaultValue={filters.search}
+                                defaultValue={filters?.search || ''}
                                 onChange={handleSearch}
                             />
                             <svg className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,11 +51,11 @@ export default function DirectoryIndex({ employees, departments, filters }: any)
                         <div className="w-full md:w-64">
                             <select 
                                 className="w-full rounded-xl border-slate-300 shadow-xs text-sm text-slate-900 focus:border-[#E31B23] focus:ring-1 focus:ring-[#E31B23] py-2.5 px-3"
-                                defaultValue={filters.department_id || ''}
+                                defaultValue={filters?.department_id || ''}
                                 onChange={handleDepartmentChange}
                             >
                                 <option value="">All Departments</option>
-                                {departments.map((dept: any) => (
+                                {(departments || []).map((dept: any) => (
                                     <option key={dept.id} value={dept.id}>{dept.name}</option>
                                 ))}
                             </select>
@@ -62,7 +64,7 @@ export default function DirectoryIndex({ employees, departments, filters }: any)
 
                     {/* Employee Cards Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {employees.map((employee: any) => (
+                        {employeeList.map((employee: any) => (
                             <div key={employee.id} className="bg-white border border-slate-200 rounded-2xl shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col">
                                 <div className="h-24 bg-gradient-to-r from-[#E31B23] via-[#c4141b] to-[#991b1b]"></div>
                                 <div className="px-6 pb-6 relative flex-grow flex flex-col items-center text-center">
@@ -96,7 +98,7 @@ export default function DirectoryIndex({ employees, departments, filters }: any)
                         ))}
                     </div>
 
-                    {employees.length === 0 && (
+                    {employeeList.length === 0 && (
                         <div className="text-center py-16 bg-white rounded-2xl shadow-xs border border-slate-200">
                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3">
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

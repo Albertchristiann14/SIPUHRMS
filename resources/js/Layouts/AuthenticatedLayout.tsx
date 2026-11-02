@@ -105,7 +105,8 @@ export default function Authenticated({
     children,
     hideSidebar = false,
 }: PropsWithChildren<{ header?: ReactNode; user?: any; hideSidebar?: boolean }>) {
-    const user = usePage().props.auth.user as any;
+    const pageProps = usePage().props as any;
+    const user = pageProps?.auth?.user ?? {};
     const currentUrl = usePage().url;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
@@ -139,9 +140,13 @@ export default function Authenticated({
 
     // Auto-expand section containing active item on page navigation
     useEffect(() => {
-        const activeSection = activeModuleInfo.sections.find(s => s.items?.some((item: any) => isItemActive(item)));
-        if (activeSection && collapsedSections[activeSection.title]) {
-            setCollapsedSections(prev => ({ ...prev, [activeSection.title]: false }));
+        try {
+            const activeSection = activeModuleInfo?.sections?.find(s => s?.items?.some((item: any) => isItemActive(item)));
+            if (activeSection && collapsedSections[activeSection.title]) {
+                setCollapsedSections(prev => ({ ...prev, [activeSection.title]: false }));
+            }
+        } catch {
+            // ignore layout expansion errors
         }
     }, [currentUrl]);
 
@@ -495,30 +500,35 @@ export default function Authenticated({
     };
 
     const isItemActive = (item: any) => {
-        if (item.params?.view) {
-            return route().current(item.pattern) && currentUrl.includes(`view=${item.params.view}`);
-        }
-        if (item.params?.tab) {
-            if (item.params.tab === 'tickets' && route().current('it.tickets.*')) {
-                return true;
+        if (!item) return false;
+        try {
+            if (item.params?.view) {
+                return Boolean(route().current(item.pattern) && currentUrl.includes(`view=${item.params.view}`));
             }
+            if (item.params?.tab) {
+                if (item.params.tab === 'tickets' && route().current('it.tickets.*')) {
+                    return true;
+                }
 
-            return (
-                route().current(item.pattern) &&
-                (currentUrl.includes(`tab=${item.params.tab}`) ||
-                    (!currentUrl.includes('tab=') && (
-                        (item.params.tab === 'overview' && isItStaff && route().current('it.index')) ||
-                        (item.params.tab === 'data' && route().current('attendance.index')) ||
-                        (item.params.tab === 'tickets' && !isItStaff && route().current('it.index')) ||
-                        (item.params.tab === 'borrow' && currentUrl.includes('room-borrowing'))
-                    ))
-                )
-            );
+                return Boolean(
+                    route().current(item.pattern) &&
+                    (currentUrl.includes(`tab=${item.params.tab}`) ||
+                        (!currentUrl.includes('tab=') && (
+                            (item.params.tab === 'overview' && isItStaff && route().current('it.index')) ||
+                            (item.params.tab === 'data' && route().current('attendance.index')) ||
+                            (item.params.tab === 'tickets' && !isItStaff && route().current('it.index')) ||
+                            (item.params.tab === 'borrow' && currentUrl.includes('room-borrowing'))
+                        ))
+                    )
+                );
+            }
+            if (item.route === 'dashboard') {
+                return Boolean(route().current('dashboard') && !currentUrl.includes('view='));
+            }
+            return Boolean(route().current(item.pattern));
+        } catch {
+            return false;
         }
-        if (item.route === 'dashboard') {
-            return route().current('dashboard') && !currentUrl.includes('view=');
-        }
-        return route().current(item.pattern);
     };
 
     return (

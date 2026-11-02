@@ -4,7 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import Badge from '@/Components/Badge';
 
-export default function EmployeesIndex({ auth, employees, departments, filters }: PageProps<{ employees: any, departments: any[], filters: any }>) {
+export default function EmployeesIndex({ auth, employees, departments = [], filters = {} }: PageProps<{ employees: any, departments: any[], filters: any }>) {
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         router.get(route('employees.index'), { ...filters, search: e.target.value }, { preserveState: true, replace: true });
     };
@@ -57,7 +57,7 @@ export default function EmployeesIndex({ auth, employees, departments, filters }
                             <input
                                 type="text"
                                 placeholder="Search by name, email, or ID..."
-                                defaultValue={filters.search}
+                                defaultValue={filters?.search || ''}
                                 onChange={handleSearch}
                                 className="w-full text-xs pl-8 pr-3 py-2 border-slate-300 rounded-xl shadow-xs focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-900"
                             />
@@ -67,17 +67,17 @@ export default function EmployeesIndex({ auth, employees, departments, filters }
                         </div>
                         <select 
                             onChange={handleDeptFilter} 
-                            defaultValue={filters.department || ''} 
+                            defaultValue={filters?.department || ''} 
                             className="text-xs border-slate-300 rounded-xl shadow-xs py-2 px-3 focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-900"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((d: any) => (
+                            {(departments || []).map((d: any) => (
                                 <option key={d.id} value={d.id}>{d.name}</option>
                             ))}
                         </select>
                         <select 
                             onChange={handleStatusFilter} 
-                            defaultValue={filters.status || ''} 
+                            defaultValue={filters?.status || ''} 
                             className="text-xs border-slate-300 rounded-xl shadow-xs py-2 px-3 focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-900"
                         >
                             <option value="">All Status</option>
@@ -102,7 +102,7 @@ export default function EmployeesIndex({ auth, employees, departments, filters }
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-slate-100">
-                                    {employees.data.map((emp: any) => (
+                                    {(employees?.data || []).map((emp: any) => (
                                         <tr key={emp.id} className="hover:bg-slate-50/60 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -134,16 +134,16 @@ export default function EmployeesIndex({ auth, employees, departments, filters }
                                             </td>
                                         </tr>
                                     ))}
-                                    {employees.data.length === 0 && (
+                                    {(employees?.data || []).length === 0 && (
                                         <tr><td colSpan={7} className="px-6 py-8 text-center text-sm text-slate-400">No employees found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
 
                             {/* Pagination */}
-                            {employees.last_page > 1 && (
+                            {(employees?.last_page || 0) > 1 && (
                                 <div className="mt-6 flex justify-center gap-1.5 pt-4 border-t border-slate-100">
-                                    {employees.links.map((link: any, i: number) => (
+                                    {(employees?.links || []).map((link: any, i: number) => (
                                         <Link
                                             key={i}
                                             href={link.url || '#'}

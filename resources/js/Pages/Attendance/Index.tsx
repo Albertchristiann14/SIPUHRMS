@@ -45,17 +45,17 @@ export default function AttendanceIndex({
     selectedDate,
     startDate,
     endDate,
-    filters,
+    filters = {} as any,
     summary,
     recentEvents = [],
     departmentStats = [],
-    departments,
-    shifts,
-    employees,
+    departments = [],
+    shifts = [],
+    employees = [],
     location,
 }: Props) {
     const [currentTab, setCurrentTab] = useState<'overview' | 'data' | 'reports' | 'settings'>(
-        (filters.tab as any) || activeTab || 'data'
+        (filters?.tab as any) || activeTab || 'data'
     );
     const [selectedRecordForDetail, setSelectedRecordForDetail] = useState<any | null>(null);
     const [selectedRecordForCorrection, setSelectedRecordForCorrection] = useState<any | null>(null);
