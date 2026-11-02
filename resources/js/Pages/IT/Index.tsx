@@ -146,13 +146,27 @@ export default function ItIndex({
     filters,
     flash,
 }: PageProps) {
-    const [tab, setTab] = useState<'overview' | 'assets' | 'tickets'>(activeTab || 'overview');
+    const [tab, setTab] = useState<'overview' | 'assets' | 'tickets'>(() => {
+        if (!isItManager) return 'tickets';
+        return activeTab || 'overview';
+    });
 
     useEffect(() => {
-        if (activeTab) {
+        if (!isItManager) {
+            setTab('tickets');
+        } else if (activeTab) {
             setTab(activeTab);
         }
-    }, [activeTab]);
+    }, [activeTab, isItManager]);
+
+    const switchTab = (newTab: 'overview' | 'assets' | 'tickets') => {
+        setTab(newTab);
+        router.get(
+            route('it.index'),
+            { tab: newTab },
+            { preserveState: true }
+        );
+    };
 
     // Modals state
     const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
@@ -551,6 +565,55 @@ export default function ItIndex({
                     </div>
                 )}
 
+                {/* Sub-navigation Pills for IT Managers / Admins */}
+                {isItManager && (
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit max-w-full overflow-x-auto border border-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => switchTab('overview')}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+                                tab === 'overview'
+                                    ? 'bg-white text-slate-900 shadow-xs ring-1 ring-slate-200/80 font-bold'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                            }`}
+                        >
+                            📊 Overview & Metrics
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => switchTab('tickets')}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+                                tab === 'tickets'
+                                    ? 'bg-white text-[#E31B23] shadow-xs ring-1 ring-slate-200/80 font-bold'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                            }`}
+                        >
+                            🎫 Helpdesk Tickets
+                            {tickets?.total > 0 && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${tab === 'tickets' ? 'bg-red-100 text-[#E31B23]' : 'bg-slate-200 text-slate-700'}`}>
+                                    {tickets.total}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => switchTab('assets')}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+                                tab === 'assets'
+                                    ? 'bg-white text-blue-700 shadow-xs ring-1 ring-slate-200/80 font-bold'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                            }`}
+                        >
+                            🖥️ Asset Inventory
+                            {assetStats?.total > 0 && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${tab === 'assets' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-700'}`}>
+                                    {assetStats.total}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                )}
+
                 {/* TAB 1: OVERVIEW & STATS (IT Staff / Admin only) */}
                 {tab === 'overview' && isItManager && (
                     <div className="space-y-6">
@@ -761,7 +824,7 @@ export default function ItIndex({
                 )}
 
                 {/* TAB 2: HELPDESK TICKETS */}
-                {tab === 'tickets' && (
+                {(tab === 'tickets' || (!isItManager && tab === 'overview')) && (
                     <div className="space-y-4">
                         {/* Filter & Search Bar */}
                         <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">

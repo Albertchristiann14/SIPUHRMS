@@ -30,8 +30,8 @@ class TaskController extends Controller
         ]);
 
         // "My Tasks" should only show tasks assigned to the user or created by the user,
-        // unless the user is Super Admin who has global oversight.
-        if (! $user->hasRole('Super Admin')) {
+        // unless the user is Super Admin, General Manager, or HRD / Admin who has global hotel oversight.
+        if (! $user->hasAnyRole(['Super Admin', 'General Manager', 'HRD / Admin'])) {
             $query->where(function ($q) use ($user) {
                 if ($user->employee) {
                     $q->whereHas('assignees', function ($sq) use ($user) {

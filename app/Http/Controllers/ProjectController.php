@@ -17,7 +17,7 @@ class ProjectController extends Controller
     private function checkAccess(Project $project)
     {
         $user = Auth::user();
-        if ($user->hasAnyRole(['Super Admin', 'General Manager'])) {
+        if ($user->hasAnyRole(['Super Admin', 'General Manager', 'HRD / Admin'])) {
             return;
         }
 
@@ -53,7 +53,7 @@ class ProjectController extends Controller
             $query->where('status', '!=', ProjectStatus::Archived->value);
         }
 
-        if (!$user->hasAnyRole(['Super Admin', 'General Manager'])) {
+        if (!$user->hasAnyRole(['Super Admin', 'General Manager', 'HRD / Admin'])) {
             $employeeId = $user->employee->id ?? null;
             $query->where(function ($q) use ($employeeId, $user) {
                 $q->where('created_by', $user->id);
