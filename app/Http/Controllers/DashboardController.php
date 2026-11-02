@@ -262,11 +262,14 @@ class DashboardController extends Controller
         $presentCount = $attendanceToday->where('status', 'Present')->count();
         $lateCount = $attendanceToday->where('status', 'Late')->count();
 
+        $hasRecords = $attendanceToday->isNotEmpty();
         $attendanceTodaySummary = [
             'total' => $totalEmployees,
             'present' => $presentCount,
             'late' => $lateCount,
-            'absent' => max(0, $totalEmployees - ($presentCount + $lateCount)),
+            'absent' => $hasRecords ? max(0, $totalEmployees - ($presentCount + $lateCount)) : 0,
+            'has_records' => $hasRecords,
+            'recorded' => $attendanceToday->count(),
         ];
 
         $recentHires = Employee::with(['user:id,name,email', 'department:id,name', 'position:id,name'])

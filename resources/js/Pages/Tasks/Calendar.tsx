@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/react';
 import TaskDetailModal from '../Projects/TaskDetailModal';
 import CreateTaskModal from '@/Components/CreateTaskModal';
 import TaskViewSwitcher from '@/Components/TaskViewSwitcher';
+import PageHeader from '@/Components/PageHeader';
 
 interface CalendarProps {
     auth: any;
@@ -399,22 +400,27 @@ export default function Calendar({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                        <h2 className="font-bold text-xl text-slate-900 leading-tight truncate">Team Calendar</h2>
-                        <p className="text-xs text-slate-500 mt-0.5 truncate">Monthly team task schedule & deadlines</p>
-                    </div>
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        <TaskViewSwitcher current="calendar" />
-                        <button
-                            onClick={() => openCreate(toDateStr(new Date()))}
-                            className="inline-flex items-center gap-1.5 bg-[#E31B23] hover:bg-[#c4141b] active:bg-[#a30f15] text-white font-semibold py-2 px-3.5 rounded-xl text-sm shadow-xs transition-colors"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-                            <span className="hidden xl:inline">Add new</span>
-                        </button>
-                    </div>
-                </div>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'Task Management', href: route('tasks.summary') },
+                        { label: 'Team Calendar' },
+                    ]}
+                    title="Team Calendar"
+                    subtitle="Jadwal bulanan penugasan dan deadline tim hotel"
+                    actions={
+                        <div className="flex items-center gap-2.5">
+                            <TaskViewSwitcher current="calendar" />
+                            <button
+                                onClick={() => openCreate(toDateStr(new Date()))}
+                                className="inline-flex items-center gap-1.5 bg-[#E31B23] hover:bg-[#c4141b] active:bg-[#a30f15] text-white font-semibold py-2 px-3.5 rounded-xl text-xs sm:text-sm shadow-xs transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                                <span>Tambah Task</span>
+                            </button>
+                        </div>
+                    }
+                />
             }
         >
             <Head title="Team Calendar" />

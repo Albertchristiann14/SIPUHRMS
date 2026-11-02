@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import AssigneeSelect from '@/Components/AssigneeSelect';
 import TaskRevisionModal from '@/Components/TaskRevisionModal';
+import DeadlineBadge from '@/Components/DeadlineBadge';
+import { getDeadlineStatus } from '@/Utils/deadline';
+import { formatDate as formatDateUtil, formatDateTime } from '@/Utils/date';
 
 interface TaskDetailModalProps {
     task: any;
@@ -505,36 +508,57 @@ export default function TaskDetailModal({
                                             {task.status}
                                         </span>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                                        {task.project?.name && (
-                                            <span>Project: <span className="font-medium text-gray-700">{task.project.name}</span></span>
-                                        )}
-                                        {(() => {
-                                            const sStr = task.start_date ? String(task.start_date).split('T')[0] : null;
-                                            const eStr = task.deadline ? String(task.deadline).split('T')[0] : null;
-                                            if (sStr && eStr && sStr !== eStr) {
-                                                const dt1 = new Date(sStr);
-                                                const dt2 = new Date(eStr);
-                                                const days = Math.round((dt2.getTime() - dt1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                                                return (
-                                                    <span className="flex items-center gap-1.5 font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                                                        <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                        Periode: {new Date(sStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - {new Date(eStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} ({days} hari)
-                                                    </span>
-                                                );
-                                            }
-                                            if (eStr || sStr) {
-                                                const d = eStr || sStr;
-                                                return (
-                                                    <span className="flex items-center gap-1">
-                                                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                        Deadline: {new Date(d!).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                    </span>
-                                                );
-                                            }
-                                            return null;
-                                        })()}
-                                    </div>
+                                    {(() => {
+                                        const deadlineInfo = getDeadlineStatus(task.deadline, task.status, task.completed_at);
+                                        const isLate = Boolean(deadlineInfo?.isOverdue && !deadlineInfo?.isCompleted);
+
+                                        return (
+                                            <>
+                                                <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                                    {task.project?.name && (
+                                                        <span>Project: <span className="font-medium text-gray-700">{task.project.name}</span></span>
+                                                    )}
+                                                    {(() => {
+                                                        const sStr = task.start_date ? String(task.start_date).split('T')[0] : null;
+                                                        const eStr = task.deadline ? String(task.deadline).split('T')[0] : null;
+                                                        if (sStr && eStr && sStr !== eStr) {
+                                                            const dt1 = new Date(sStr);
+                                                            const dt2 = new Date(eStr);
+                                                            const days = Math.round((dt2.getTime() - dt1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                                            return (
+                                                                <span className="flex items-center gap-1.5 font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                                    <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                                    Periode: {formatDateUtil(sStr)} - {formatDateUtil(eStr)} ({days} hari)
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
+                                                    {task.deadline && (
+                                                        <DeadlineBadge 
+                                                            dueDate={task.deadline} 
+                                                            status={task.status} 
+                                                            completedAt={task.completed_at} 
+                                                            size="sm" 
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {/* Explanatory Overdue Notice */}
+                                                {isLate && (
+                                                    <div className="mt-2.5 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-xs text-red-800 flex items-start gap-2 shadow-xs">
+                                                        <svg className="w-4 h-4 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                        </svg>
+                                                        <div>
+                                                            <span className="font-bold">Keterlambatan: </span>
+                                                            Task ini melewati batas waktu pada <span className="font-bold underline">{formatDateTime(task.deadline)}</span> dan belum diselesaikan.
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             ) : (
                                 <div>
@@ -1441,7 +1465,7 @@ export default function TaskDetailModal({
                                                     <div className="flex flex-col">
                                                         <span className="text-xs sm:text-sm font-semibold text-slate-900">{activity.description}</span>
                                                         <span className="text-[10px] text-slate-500 mt-0.5">
-                                                            By {activity.employee?.user?.name || 'System'} • {new Date(activity.created_at).toLocaleString('en-US')}
+                                                            By {activity.employee?.user?.name || 'System'} • {formatDateTime(activity.created_at)}
                                                         </span>
                                                         {activity.old_value && activity.new_value && (
                                                             <div className="mt-2 text-xs text-slate-600 bg-slate-50 p-2 border border-slate-200 rounded-lg inline-block">

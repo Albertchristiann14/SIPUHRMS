@@ -4,6 +4,9 @@ import { Head, useForm } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Badge from '@/Components/Badge';
+import PageHeader from '@/Components/PageHeader';
+import EmptyState from '@/Components/EmptyState';
+import { formatDate } from '@/Utils/date';
 
 export default function AnnouncementIndex({ announcements, auth, flash }: any) {
     const [showForm, setShowForm] = useState(false);
@@ -13,7 +16,7 @@ export default function AnnouncementIndex({ announcements, auth, flash }: any) {
         target_audience: 'All',
     });
 
-    const isHR = auth.user.roles?.some((r: any) => r.name === 'HRD / Admin' || r.name === 'General Manager');
+    const isHR = auth.user.roles?.some((r: any) => r.name === 'Super Admin' || r.name === 'HRD / Admin' || r.name === 'General Manager');
 
     const submit = (e: any) => {
         e.preventDefault();
@@ -28,22 +31,24 @@ export default function AnnouncementIndex({ announcements, auth, flash }: any) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 className="font-bold text-xl text-slate-900 tracking-tight">Swiss-Belinn Internal Announcements</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Official hotel management notices and updates for all staff and departments.</p>
-                    </div>
-                    {isHR && (
-                        <PrimaryButton 
-                            onClick={() => setShowForm(!showForm)}
-                        >
-                            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'Human Resources', href: route('dashboard', { view: 'hr' }) },
+                        { label: 'Announcements' },
+                    ]}
+                    title="Internal Announcements"
+                    subtitle="Pengumuman dan pemberitahuan resmi manajemen hotel untuk seluruh staf dan departemen."
+                    primaryAction={isHR ? {
+                        label: showForm ? 'Close Form' : 'New Announcement',
+                        icon: (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            {showForm ? 'Close Form' : 'New Announcement'}
-                        </PrimaryButton>
-                    )}
-                </div>
+                        ),
+                        onClick: () => setShowForm(!showForm),
+                    } : undefined}
+                />
             }
         >
             <Head title="Announcements" />
@@ -120,7 +125,7 @@ export default function AnnouncementIndex({ announcements, auth, flash }: any) {
                                     <div className="flex justify-between items-start mb-2 gap-4">
                                         <h3 className="text-lg font-bold text-slate-900">{announcement.title}</h3>
                                         <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full font-medium shrink-0 tabular-nums">
-                                            {new Date(announcement.published_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            {formatDate(announcement.published_at)}
                                         </span>
                                     </div>
                                     <div className="text-xs text-slate-500 mb-4 flex items-center gap-2">
@@ -134,15 +139,14 @@ export default function AnnouncementIndex({ announcements, auth, flash }: any) {
                                 </div>
                             ))
                         ) : (
-                            <div className="bg-white p-16 text-center text-slate-500 rounded-2xl shadow-xs border border-slate-200">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3">
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-base font-semibold text-slate-900">No announcements yet</h3>
-                                <p className="mt-1 text-xs text-slate-400">Official announcements from hotel management will be displayed here.</p>
-                            </div>
+                            <EmptyState
+                                title="Belum ada pengumuman"
+                                description="Pengumuman resmi dari manajemen hotel akan ditampilkan di sini."
+                                action={isHR ? {
+                                    label: 'Buat Pengumuman',
+                                    onClick: () => setShowForm(true),
+                                } : undefined}
+                            />
                         )}
                     </div>
                 </div>

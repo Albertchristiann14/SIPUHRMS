@@ -11,6 +11,8 @@ import ReturnRequestModal from './Partials/ReturnRequestModal';
 import SecurityConfirmReturnModal from './Partials/SecurityConfirmReturnModal';
 import RoomModal from './Partials/RoomModal';
 import QrCodeModal from './Partials/QrCodeModal';
+import PageHeader from '@/Components/PageHeader';
+import StatCard from '@/Components/StatCard';
 
 interface Room {
     id: number;
@@ -350,7 +352,37 @@ export default function Index({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'Room & Key Management' },
+                        { label: activeTab === 'catalog' ? 'Room Catalog' : activeTab === 'my-borrowings' ? 'My Borrowings' : activeTab === 'pending-returns' ? 'Security Queue' : activeTab === 'manage-rooms' ? 'Manage Rooms' : 'Borrowing & Keys' },
+                    ]}
+                    title="Room Borrowing & Key Management"
+                    subtitle="Katalog ketersediaan ruangan hotel, peminjaman kunci, dan verifikasi pos Security"
+                    primaryAction={{
+                        label: 'Security Post QR Code',
+                        icon: (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                        ),
+                        onClick: () => setQrModalOpen(true),
+                    }}
+                    secondaryAction={permissions.can_manage_rooms ? {
+                        label: 'Add Room',
+                        icon: (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                        ),
+                        onClick: handleOpenCreateRoom,
+                    } : undefined}
+                />
+            }
+        >
             <Head title="Room & Key Borrowing - SIPU Swiss-Belinn SKA" />
 
             <div className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -381,211 +413,55 @@ export default function Index({
                     </div>
                 )}
 
-                {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                            Room Borrowing & Key Management
-                        </h1>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Hotel room availability catalog, key loan logs, and physical return verification at Security post.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        {/* QR Code Stand Button */}
-                        <button
-                            type="button"
-                            onClick={() => setQrModalOpen(true)}
-                            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-400 transition-all active:scale-95"
-                            title="Display & Print Shared QR Code for Security Post"
-                        >
-                            <svg className="w-4 h-4 text-[#E31B23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                            <span>Security Post QR Code</span>
-                        </button>
-
-                        {/* Admin Add Room Button */}
-                        {permissions.can_manage_rooms && (
-                            <PrimaryButton
-                                type="button"
-                                onClick={handleOpenCreateRoom}
-                                className="bg-[#E31B23] hover:bg-[#C4141B]"
-                            >
-                                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                <span>Add Room</span>
-                            </PrimaryButton>
-                        )}
-                    </div>
-                </div>
-
                 {/* Metrics Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Total Rooms */}
-                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center justify-between">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Rooms</span>
-                            <div className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{stats.total}</div>
-                            <span className="text-[11px] text-slate-400">Registered in hotel</span>
-                        </div>
-                        <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                    <StatCard
+                        label="Total Rooms"
+                        value={stats.total}
+                        description="Registered in hotel"
+                        variant="neutral"
+                        icon={
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
-                        </div>
-                    </div>
+                        }
+                    />
 
-                    {/* Available Keys */}
-                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center justify-between">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Available</span>
-                            <div className="mt-1 text-2xl font-bold text-emerald-600 tabular-nums">{stats.available}</div>
-                            <span className="text-[11px] text-emerald-600 font-medium">Keys ready to loan</span>
-                        </div>
-                        <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+                    <StatCard
+                        label="Available"
+                        value={stats.available}
+                        description="Keys ready to loan"
+                        variant="success"
+                        icon={
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                        </div>
-                    </div>
+                        }
+                    />
 
-                    {/* Borrowed Keys */}
-                    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center justify-between">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Borrowed</span>
-                            <div className="mt-1 text-2xl font-bold text-rose-600 tabular-nums">{stats.borrowed}</div>
-                            <span className="text-[11px] text-rose-600 font-medium">Keys with staff</span>
-                        </div>
-                        <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+                    <StatCard
+                        label="Borrowed"
+                        value={stats.borrowed}
+                        description="Keys with staff"
+                        variant="danger"
+                        icon={
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                             </svg>
-                        </div>
-                    </div>
+                        }
+                    />
 
-                    {/* Pending Return Keys */}
-                    <div className={`bg-white rounded-2xl border p-4 shadow-xs flex items-center justify-between transition-colors ${
-                        stats.pending_return > 0 ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200/80'
-                    }`}>
-                        <div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Return</span>
-                                {stats.pending_return > 0 && (
-                                    <span className="flex h-2 w-2 relative">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                    </span>
-                                )}
-                            </div>
-                            <div className="mt-1 text-2xl font-bold text-amber-600 tabular-nums">{stats.pending_return}</div>
-                            <span className="text-[11px] text-amber-700 font-medium">Physical check at post</span>
-                        </div>
-                        <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                    <StatCard
+                        label="Pending Return"
+                        value={stats.pending_return}
+                        description="Physical check at post"
+                        variant="warning"
+                        icon={
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ═══════════════════════════════════════════════════════════════════════════
-                    MODULE TAB SWITCHER BAR
-                ═══════════════════════════════════════════════════════════════════════════ */}
-                <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80 overflow-x-auto shadow-2xs">
-                    <button
-                        type="button"
-                        onClick={() => switchTab('borrow')}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
-                            activeTab === 'borrow'
-                                ? 'bg-white text-[#E31B23] shadow-xs ring-1 ring-slate-200/60 font-bold'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span>Borrowing Form</span>
-                    </button>
-
-                    {isItStaff && (
-                        <button
-                            type="button"
-                            onClick={() => switchTab('catalog')}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
-                                activeTab === 'catalog'
-                                    ? 'bg-white text-purple-700 shadow-xs ring-1 ring-slate-200/60 font-bold'
-                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                            }`}
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <span>Room Catalog</span>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">IT Only</span>
-                        </button>
-                    )}
-
-                    <button
-                        type="button"
-                        onClick={() => switchTab('my-borrowings')}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
-                            activeTab === 'my-borrowings'
-                                ? 'bg-white text-[#E31B23] shadow-xs ring-1 ring-slate-200/60 font-bold'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                        <span>My Borrowings</span>
-                        {myActiveBorrowings.length > 0 && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E31B23] text-white tabular-nums">
-                                {myActiveBorrowings.length}
-                            </span>
-                        )}
-                    </button>
-
-                    {permissions.can_approve_return && (
-                        <button
-                            type="button"
-                            onClick={() => switchTab('pending-returns')}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
-                                activeTab === 'pending-returns'
-                                    ? 'bg-white text-amber-700 shadow-xs ring-1 ring-slate-200/60 font-bold'
-                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                            }`}
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                            <span>Security Queue</span>
-                            {pendingReturns.length > 0 && (
-                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white tabular-nums">
-                                    {pendingReturns.length}
-                                </span>
-                            )}
-                        </button>
-                    )}
-
-                    {permissions.can_manage_rooms && (
-                        <button
-                            type="button"
-                            onClick={() => switchTab('manage-rooms')}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
-                                activeTab === 'manage-rooms'
-                                    ? 'bg-white text-slate-900 shadow-xs ring-1 ring-slate-200/60 font-bold'
-                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                            }`}
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span>Manage Rooms</span>
-                        </button>
-                    )}
+                        }
+                    />
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════════════════
@@ -593,21 +469,22 @@ export default function Index({
                 ═══════════════════════════════════════════════════════════════════════════ */}
                 {activeTab === 'borrow' && (
                     <div className="space-y-6">
-                        {/* Unified Form Header Banner */}
-                        <div className="bg-gradient-to-r from-red-900 via-[#E31B23] to-red-800 rounded-3xl p-6 sm:p-7 text-white shadow-md relative overflow-hidden">
-                            <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 transform skew-x-12 pointer-events-none" />
-                            <div className="relative z-10 max-w-2xl">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md text-white mb-2.5">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {/* Compact Hero Banner (<= 80px) */}
+                        <div className="bg-gradient-to-r from-red-800 to-rose-700 rounded-2xl px-5 py-3.5 text-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                     </svg>
-                                    Single-Step Key Custody Loan
-                                </span>
-                                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Room & Key Borrowing Form</h2>
-                                <p className="mt-1.5 text-xs sm:text-sm text-red-100 leading-relaxed">
-                                    Select a hotel room, verify physical key availability in real-time, and specify borrowing duration in one seamless form.
-                                </p>
+                                </div>
+                                <div>
+                                    <h2 className="text-sm sm:text-base font-bold leading-tight">Room & Key Borrowing Form</h2>
+                                    <p className="text-xs text-red-100">Pilih ruangan hotel, cek ketersediaan fisik kunci secara real-time, dan isi durasi peminjaman.</p>
+                                </div>
                             </div>
+                            <span className="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/15 text-white border border-white/20 whitespace-nowrap">
+                                Verifikasi Pos Security
+                            </span>
                         </div>
 
                         {/* 2-Column Responsive Layout */}

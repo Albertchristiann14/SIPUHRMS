@@ -33,7 +33,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => fn () => $request->user() ? $request->user()->load(['roles', 'employee.department', 'employee.position']) : null,
-                'notifications' => fn () => $request->user() ? $request->user()->unreadNotifications()->latest()->take(5)->get() : [],
+                'notifications' => function () use ($request) {
+                    if (! $request->user()) {
+                        return [];
+                    }
+                    \App\Services\TaskDeadlineService::checkAndNotifyForUser($request->user());
+                    return $request->user()->unreadNotifications()->latest()->take(10)->get();
+                },
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

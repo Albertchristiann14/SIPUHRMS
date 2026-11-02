@@ -3,6 +3,7 @@ import Dropdown from '@/Components/Dropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage, router } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useEffect, useMemo } from 'react';
+import GlobalSearchModal from '@/Components/GlobalSearchModal';
 
 const icons: Record<string, JSX.Element> = {
     'Main Menu': <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
@@ -109,6 +110,7 @@ export default function Authenticated({
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [navigatingMethod, setNavigatingMethod] = useState<'get' | 'post' | 'put' | 'patch' | 'delete'>('get');
+    const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
     // Sidebar open/close state with localStorage persistence
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
@@ -143,12 +145,15 @@ export default function Authenticated({
         }
     }, [currentUrl]);
 
-    // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar
+    // Keyboard shortcuts: Ctrl+B (sidebar) and Ctrl+K (search)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
                 e.preventDefault();
                 toggleSidebar();
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                setShowGlobalSearch(prev => !prev);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -595,9 +600,9 @@ export default function Authenticated({
                                             type="button"
                                             onClick={() => toggleSection(section.title)}
                                             className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-gray-500 hover:text-gray-800 uppercase tracking-widest mb-1.5 group select-none cursor-pointer rounded-lg hover:bg-slate-100/70 transition-all active:scale-[0.99]"
-                                            title={isCollapsed ? `Expand ${section.title}` : `Collapse ${section.title}`}
+                                            title={section.title}
                                         >
-                                            <span className="truncate">{section.title}</span>
+                                            <span className="truncate" title={section.title}>{section.title}</span>
                                             <svg
                                                 className={`w-3.5 h-3.5 text-gray-400 group-hover:text-gray-700 transition-transform duration-200 ease-in-out shrink-0 pointer-events-none ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
                                                 fill="none"
@@ -658,7 +663,7 @@ export default function Authenticated({
                             </Link>
                         </div>
 
-                        {/* User Profile & Collapse Sidebar Footer */}
+                        {/* User Profile Footer */}
                         <div className="shrink-0 border-t border-slate-100 p-3 bg-white/50">
                             <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
                                 <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 shadow-xs shrink-0">
@@ -678,19 +683,6 @@ export default function Authenticated({
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Bottom Collapse Button */}
-                            <button
-                                type="button"
-                                onClick={toggleSidebar}
-                                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors mt-2"
-                                title="Collapse Sidebar (Ctrl+B)"
-                            >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                                </svg>
-                                <span>Collapse Sidebar</span>
-                            </button>
                         </div>
                     </div>
                 </aside>
@@ -782,18 +774,40 @@ export default function Authenticated({
                         )}
 
                         {/* Topbar right */}
-                        <div className="ml-auto flex items-center gap-3">
+                        <div className="ml-auto flex items-center gap-2.5 sm:gap-3">
+                            {/* Global Search / Command Palette Trigger (Available across all modules) */}
+                            <button
+                                type="button"
+                                onClick={() => setShowGlobalSearch(true)}
+                                className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 bg-slate-100/90 hover:bg-slate-200/80 rounded-xl border border-slate-200/80 transition-all cursor-pointer shadow-2xs group"
+                                title="Search modules, pages, or shortcuts (Ctrl+K)"
+                                aria-label="Search system (Ctrl+K)"
+                            >
+                                <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <span className="hidden sm:inline font-medium">Search...</span>
+                                <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">Ctrl K</kbd>
+                            </button>
+
                             {/* Notifications Dropdown */}
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <button className="relative flex items-center justify-center p-2.5 text-slate-400 hover:text-[#E31B23] hover:bg-red-50 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#E31B23]/20">
+                                    <button 
+                                        className="relative flex items-center justify-center p-2 text-slate-400 hover:text-[#E31B23] hover:bg-red-50 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#E31B23]/20"
+                                        aria-label="Notifikasi"
+                                    >
                                         <svg className="w-5 h-5 transition-transform duration-300 hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                        {(usePage().props.auth as any).notifications?.length > 0 && (
-                                            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E31B23]"></span>
-                                            </span>
-                                        )}
+                                        {(() => {
+                                            const notifList = (usePage().props.auth as any).notifications || [];
+                                            const notifCount = notifList.length;
+                                            if (notifCount === 0) return null;
+                                            return (
+                                                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E31B23] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
+                                                    {notifCount > 9 ? '9+' : notifCount}
+                                                </span>
+                                            );
+                                        })()}
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content contentClasses="w-80 sm:w-96 bg-white py-0 rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
@@ -1088,6 +1102,8 @@ export default function Authenticated({
                     </div>
                 </>
             )}
+            {/* Global Search / Command Palette Modal */}
+            <GlobalSearchModal isOpen={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} />
         </div>
     );
 }

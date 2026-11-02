@@ -8,6 +8,9 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
+import PageHeader from '@/Components/PageHeader';
+import StatCard from '@/Components/StatCard';
+import TextLink from '@/Components/TextLink';
 
 interface Asset {
     id: number;
@@ -453,91 +456,49 @@ export default function ItIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 text-white flex items-center justify-center shadow-md shadow-red-600/20">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
-                                    Swiss-Belinn IT & Systems
-                                </span>
-                                {isItManager && (
-                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                        IT Admin Access
-                                    </span>
-                                )}
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                                {isItManager ? 'IT Operations & Helpdesk' : 'IT Helpdesk & Support'}
-                            </h2>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {/* Report IT Issue Button - Available to everyone */}
-                        <button
-                            onClick={() => {
-                                ticketForm.reset();
-                                setIsCreateTicketOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 shadow-sm shadow-red-600/25 transition-all hover:scale-102 cursor-pointer"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'IT Operations', href: route('it.index') },
+                        { label: isItManager ? 'Operations & Helpdesk' : 'Helpdesk Support' },
+                    ]}
+                    title={isItManager ? 'IT Operations & Helpdesk' : 'IT Helpdesk & Support'}
+                    subtitle="Sistem manajemen aset teknologi informasi dan tiket bantuan teknis hotel"
+                    primaryAction={{
+                        label: 'Report IT Issue',
+                        onClick: () => {
+                            ticketForm.reset();
+                            setIsCreateTicketOpen(true);
+                        },
+                        icon: (
+                            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            <span>Report IT Issue</span>
-                        </button>
-
-                        {/* Add Asset - Only for IT Managers */}
-                        {isItManager && (
-                            <>
-                                <Link
-                                    href={route('it.registrations.index')}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                                >
-                                    <svg className="w-4 h-4 text-[#E31B23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>Registration Approvals</span>
-                                </Link>
-
-                                <Link
-                                    href={route('power-pro.index')}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                                >
-                                    <svg className="w-4 h-4 text-[#E31B23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                    </svg>
-                                    <span>PowerPro ID Requests</span>
-                                </Link>
-
-                                <Link
-                                    href={route('master-keys.index')}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                                >
-                                    <svg className="w-4 h-4 text-[#E31B23]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
-                                    <span>Master Key Programming</span>
-                                </Link>
-
-                                <button
-                                    onClick={openCreateAsset}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                                >
-                                    <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <span>Add IT Asset</span>
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
+                        ),
+                    }}
+                    secondaryAction={
+                        isItManager
+                            ? {
+                                  label: 'Add IT Asset',
+                                  onClick: openCreateAsset,
+                                  icon: (
+                                      <svg className="w-4 h-4 mr-1.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                  ),
+                              }
+                            : undefined
+                    }
+                    moreActions={
+                        isItManager
+                            ? [
+                                  { label: 'Registration Approvals', href: route('it.registrations.index') },
+                                  { label: 'PowerPro ID Requests', href: route('power-pro.index') },
+                                  { label: 'Master Key Programming', href: route('master-keys.index') },
+                              ]
+                            : undefined
+                    }
+                />
             }
         >
             <Head title={isItManager ? "IT Operations & Helpdesk - Swiss-Belinn" : "IT Helpdesk - Swiss-Belinn"} />
@@ -594,118 +555,71 @@ export default function ItIndex({
                 {tab === 'overview' && isItManager && (
                     <div className="space-y-6">
                         {/* High-level Metric Cards */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* Open Tickets */}
-                            <div
-                                onClick={() => navigateToTicketStatus('Open')}
-                                className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-200/80 shadow-2xs flex flex-col justify-between hover:shadow-md hover:border-amber-300 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
-                                title="Click to view new tickets (Open)"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wider group-hover:text-amber-800 transition-colors">
-                                        New Tickets (Open)
-                                    </span>
-                                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
-                                        ⏳
-                                    </div>
-                                </div>
-                                <div className="mt-3">
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
-                                        {ticketStats.open}
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Awaiting IT technician response
-                                    </p>
-                                    <div className="mt-2.5 pt-2 border-t border-amber-100/60 flex items-center justify-between text-[11px] font-bold text-amber-700">
-                                        <span>View Open Tickets</span>
-                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <StatCard
+                                label="New Tickets (Open)"
+                                value={ticketStats.open}
+                                description="Awaiting IT technician response"
+                                variant="warning"
+                                icon={
+                                    <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                }
+                                action={{
+                                    label: 'View Open Tickets',
+                                    onClick: () => navigateToTicketStatus('Open'),
+                                }}
+                            />
 
-                            {/* In Progress */}
-                            <div
-                                onClick={() => navigateToTicketStatus('In Progress')}
-                                className="bg-white rounded-2xl p-4 sm:p-5 border border-indigo-200/80 shadow-2xs flex flex-col justify-between hover:shadow-md hover:border-indigo-300 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
-                                title="Click to view in-progress tickets"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider group-hover:text-indigo-800 transition-colors">
-                                        In Progress
-                                    </span>
-                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
-                                        ⚙️
-                                    </div>
-                                </div>
-                                <div className="mt-3">
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600">
-                                        {ticketStats.in_progress}
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Under investigation / repair
-                                    </p>
-                                    <div className="mt-2.5 pt-2 border-t border-indigo-100/60 flex items-center justify-between text-[11px] font-bold text-indigo-700">
-                                        <span>View In-Progress Tickets</span>
-                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <StatCard
+                                label="In Progress"
+                                value={ticketStats.in_progress}
+                                description="Under investigation / repair"
+                                variant="info"
+                                icon={
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                }
+                                action={{
+                                    label: 'View In-Progress Tickets',
+                                    onClick: () => navigateToTicketStatus('In Progress'),
+                                }}
+                            />
 
-                            {/* Resolved & Closed */}
-                            <div
-                                onClick={() => navigateToTicketStatus('Resolved')}
-                                className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200/80 shadow-2xs flex flex-col justify-between hover:shadow-md hover:border-emerald-300 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
-                                title="Click to view resolved tickets"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider group-hover:text-emerald-800 transition-colors">
-                                        Resolved Tickets
-                                    </span>
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
-                                        ✅
-                                    </div>
-                                </div>
-                                <div className="mt-3">
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">
-                                        {ticketStats.resolved + ticketStats.closed}
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Tickets successfully resolved
-                                    </p>
-                                    <div className="mt-2.5 pt-2 border-t border-emerald-100/60 flex items-center justify-between text-[11px] font-bold text-emerald-700">
-                                        <span>View Resolved Tickets</span>
-                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <StatCard
+                                label="Resolved Tickets"
+                                value={ticketStats.resolved + ticketStats.closed}
+                                description="Tickets successfully resolved"
+                                variant="success"
+                                icon={
+                                    <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                }
+                                action={{
+                                    label: 'View Resolved Tickets',
+                                    onClick: () => navigateToTicketStatus('Resolved'),
+                                }}
+                            />
 
-                            {/* Total Assets */}
-                            <div
-                                onClick={navigateToAssets}
-                                className="bg-white rounded-2xl p-4 sm:p-5 border border-red-200/80 shadow-2xs flex flex-col justify-between hover:shadow-md hover:border-red-300 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
-                                title="Click to view IT asset inventory"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-red-700 uppercase tracking-wider group-hover:text-red-800 transition-colors">
-                                        Total IT Assets
-                                    </span>
-                                    <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
-                                        💻
-                                    </div>
-                                </div>
-                                <div className="mt-3">
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-red-700">
-                                        {assetStats.total}
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {assetStats.in_use} In Use • {assetStats.maintenance} In Service
-                                    </p>
-                                    <div className="mt-2.5 pt-2 border-t border-red-100/60 flex items-center justify-between text-[11px] font-bold text-red-700">
-                                        <span>Open Asset Inventory</span>
-                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <StatCard
+                                label="Total IT Assets"
+                                value={assetStats.total}
+                                description={`${assetStats.in_use} In Use • ${assetStats.maintenance} In Service`}
+                                variant="neutral"
+                                icon={
+                                    <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                }
+                                action={{
+                                    label: 'Open Asset Inventory',
+                                    onClick: navigateToAssets,
+                                }}
+                            />
                         </div>
 
                         {/* 2-Column Split: Recent Active Tickets & Asset Status Distribution */}

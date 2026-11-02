@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
+import { formatDate } from '@/Utils/date';
 
 export default function HRDashboard({ data }: { data: any }) {
     const stats = {
@@ -16,7 +16,11 @@ export default function HRDashboard({ data }: { data: any }) {
     const pendingOvertime = data?.pendingOvertime ?? 0;
     const recentHires = data?.recentHires || [];
 
-    const attendanceRate = attendanceToday.total > 0
+    const hasAttendanceRecords = attendanceToday?.has_records !== undefined 
+        ? Boolean(attendanceToday.has_records) 
+        : (attendanceToday.present > 0 || attendanceToday.late > 0);
+
+    const attendanceRate = attendanceToday.total > 0 && hasAttendanceRecords
         ? Math.round((attendanceToday.present / attendanceToday.total) * 100)
         : 0;
 
@@ -85,42 +89,71 @@ export default function HRDashboard({ data }: { data: any }) {
                         </h3>
                         <Link href={route('attendance.index')} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">View All →</Link>
                     </div>
-                    <div className="flex items-center gap-6">
-                        {/* Ring chart */}
-                        <div className="relative flex-shrink-0">
-                            <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
-                                <circle cx="60" cy="60" r="48" fill="none" stroke="#f3f4f6" strokeWidth="14" />
-                                <circle cx="60" cy="60" r="48" fill="none"
-                                    stroke="#10b981"
-                                    strokeWidth="14" strokeLinecap="round"
-                                    strokeDasharray={`${(attendanceRate / 100) * 301.6} 301.6`}
-                                    className="transition-all duration-1000"
-                                />
+                    {/* Attendance Content */}
+                    {!hasAttendanceRecords ? (
+                        <div className="py-6 px-4 text-center rounded-xl bg-slate-50 border border-slate-100">
+                            <svg className="mx-auto w-8 h-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-bold text-gray-800">{attendanceRate}%</span>
-                                <span className="text-[9px] text-gray-400 font-semibold uppercase">Rate</span>
+                            <p className="text-sm font-semibold text-slate-700">Belum ada data absensi hari ini</p>
+                            <p className="text-xs text-slate-400 mt-0.5">Catatan kehadiran staff untuk hari ini belum tercatat pada sistem.</p>
+                            <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-slate-200/60 text-center">
+                                <div className="p-2 rounded-lg bg-white border border-slate-100">
+                                    <div className="text-sm font-bold text-slate-400">–</div>
+                                    <div className="text-[10px] text-slate-400 font-medium uppercase">Present</div>
+                                </div>
+                                <div className="p-2 rounded-lg bg-white border border-slate-100">
+                                    <div className="text-sm font-bold text-slate-400">–</div>
+                                    <div className="text-[10px] text-slate-400 font-medium uppercase">Late</div>
+                                </div>
+                                <div className="p-2 rounded-lg bg-white border border-slate-100">
+                                    <div className="text-sm font-bold text-slate-400">–</div>
+                                    <div className="text-[10px] text-slate-400 font-medium uppercase">Absent</div>
+                                </div>
+                                <div className="p-2 rounded-lg bg-white border border-slate-100">
+                                    <div className="text-sm font-bold text-slate-700">{attendanceToday.total}</div>
+                                    <div className="text-[10px] text-slate-500 font-medium uppercase">Total</div>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex-1 grid grid-cols-2 gap-3">
-                            <div className="text-center p-3 rounded-lg bg-emerald-50">
-                                <div className="text-xl font-bold text-emerald-700">{attendanceToday.present}</div>
-                                <div className="text-[10px] font-semibold text-emerald-600 uppercase">Present</div>
+                    ) : (
+                        <div className="flex items-center gap-6">
+                            {/* Ring chart */}
+                            <div className="relative flex-shrink-0">
+                                <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="48" fill="none" stroke="#f3f4f6" strokeWidth="14" />
+                                    <circle cx="60" cy="60" r="48" fill="none"
+                                        stroke="#10b981"
+                                        strokeWidth="14" strokeLinecap="round"
+                                        strokeDasharray={`${(attendanceRate / 100) * 301.6} 301.6`}
+                                        className="transition-all duration-1000"
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-2xl font-bold text-gray-800">{attendanceRate}%</span>
+                                    <span className="text-[9px] text-gray-400 font-semibold uppercase">Rate</span>
+                                </div>
                             </div>
-                            <div className="text-center p-3 rounded-lg bg-amber-50">
-                                <div className="text-xl font-bold text-amber-700">{attendanceToday.late}</div>
-                                <div className="text-[10px] font-semibold text-amber-600 uppercase">Late</div>
-                            </div>
-                            <div className="text-center p-3 rounded-lg bg-red-50">
-                                <div className="text-xl font-bold text-red-700">{attendanceToday.absent}</div>
-                                <div className="text-[10px] font-semibold text-red-600 uppercase">Absent</div>
-                            </div>
-                            <div className="text-center p-3 rounded-lg bg-gray-50">
-                                <div className="text-xl font-bold text-gray-700">{attendanceToday.total}</div>
-                                <div className="text-[10px] font-semibold text-gray-500 uppercase">Total</div>
+                            <div className="flex-1 grid grid-cols-2 gap-3">
+                                <div className="text-center p-3 rounded-lg bg-emerald-50">
+                                    <div className="text-xl font-bold text-emerald-700">{attendanceToday.present}</div>
+                                    <div className="text-[10px] font-semibold text-emerald-600 uppercase">Present</div>
+                                </div>
+                                <div className="text-center p-3 rounded-lg bg-amber-50">
+                                    <div className="text-xl font-bold text-amber-700">{attendanceToday.late}</div>
+                                    <div className="text-[10px] font-semibold text-amber-600 uppercase">Late</div>
+                                </div>
+                                <div className="text-center p-3 rounded-lg bg-red-50">
+                                    <div className="text-xl font-bold text-red-700">{attendanceToday.absent}</div>
+                                    <div className="text-[10px] font-semibold text-red-600 uppercase">Absent</div>
+                                </div>
+                                <div className="text-center p-3 rounded-lg bg-gray-50">
+                                    <div className="text-xl font-bold text-gray-700">{attendanceToday.total}</div>
+                                    <div className="text-[10px] font-semibold text-gray-500 uppercase">Total</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Recent Hires */}
@@ -133,26 +166,39 @@ export default function HRDashboard({ data }: { data: any }) {
                         <Link href={route('employees.index')} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">View All →</Link>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {recentHires.length > 0 ? recentHires.map((emp: any) => (
-                            <div key={emp.id} className="px-5 py-3.5 hover:bg-gray-50/50 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                        {emp.user?.name?.charAt(0) || '?'}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-medium text-gray-900 truncate">{emp.user?.name}</p>
-                                        <p className="text-xs text-gray-400 truncate">
-                                            {emp.position?.name} · {emp.department?.name}
-                                        </p>
-                                    </div>
-                                    <div className="text-right flex-shrink-0">
-                                        <p className="text-xs text-gray-500">
-                                            {emp.join_date ? new Date(emp.join_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-                                        </p>
+                        {recentHires.length > 0 ? recentHires.map((emp: any) => {
+                            const pos = emp.position?.name;
+                            const dept = emp.department?.name;
+                            let subLabel = 'Belum diatur';
+                            if (pos && dept) {
+                                subLabel = `${pos} · ${dept}`;
+                            } else if (pos) {
+                                subLabel = pos;
+                            } else if (dept) {
+                                subLabel = dept;
+                            }
+
+                            return (
+                                <div key={emp.id} className="px-5 py-3.5 hover:bg-gray-50/50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                            {emp.user?.name?.charAt(0) || '?'}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-gray-900 truncate">{emp.user?.name}</p>
+                                            <p className="text-xs text-slate-500 truncate">
+                                                {subLabel}
+                                            </p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <p className="text-xs text-slate-500 font-medium">
+                                                {emp.join_date ? formatDate(emp.join_date) : '-'}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )) : (
+                            );
+                        }) : (
                             <div className="px-5 py-8 text-center">
                                 <p className="text-sm text-gray-400">No recent hires</p>
                             </div>

@@ -2,6 +2,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
 import Modal from '@/Components/Modal';
+import DeadlineBadge from '@/Components/DeadlineBadge';
+import TextLink from '@/Components/TextLink';
+import { formatDate, formatDateTime } from '@/Utils/date';
+import { isTaskCompleted, sortTasksByDeadlineAndOverdue } from '@/Utils/deadline';
+import { pluralize, formatActivitySentence } from '@/Utils/format';
 
 const EmployeeDashboard = lazy(() => import('./Dashboard/Partials/EmployeeDashboard'));
 const SupervisorDashboard = lazy(() => import('./Dashboard/Partials/SupervisorDashboard'));
@@ -183,10 +188,10 @@ export default function Dashboard({
             action: () => router.get(route('dashboard'), { view: 'hr' }),
             gradient: 'from-red-600 via-rose-600 to-red-700',
             badge: isAdmin
-                ? (pendingHrCount > 0 ? `${pendingHrCount} Pending` : launcherStats.totalEmployees && launcherStats.totalEmployees > 0 ? `${launcherStats.totalEmployees} Staff` : null)
+                ? (pendingHrCount > 0 ? pluralize(pendingHrCount, 'Pending', 'Pending') : launcherStats.totalEmployees && launcherStats.totalEmployees > 0 ? `${launcherStats.totalEmployees} Staff` : null)
                 : (isSupervisor
-                    ? ((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0) > 0 ? `${(launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0)} Pending` : null)
-                    : ((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0) > 0 ? `${(launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0)} Requests` : null)),
+                    ? ((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0) > 0 ? pluralize((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0), 'Pending', 'Pending') : null)
+                    : ((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0) > 0 ? pluralize((launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0), 'Permohonan', 'Permohonan') : null)),
             badgeColor: (pendingHrCount > 0 || (launcherStats.pendingLeaves || 0) + (launcherStats.pendingOvertime || 0) > 0) ? 'bg-amber-500' : 'bg-[#E31B23]',
             visible: true,
             icon: (
@@ -204,7 +209,7 @@ export default function Dashboard({
             category: 'IT & Facilities',
             href: isItStaff ? route('it.index', { tab: 'overview' }) : route('it.index', { tab: 'tickets' }),
             gradient: 'from-red-600 to-rose-700',
-            badge: launcherStats.openItTickets && launcherStats.openItTickets > 0 ? `${launcherStats.openItTickets} Active Tickets` : (isItStaff && launcherStats.totalItAssets ? `${launcherStats.totalItAssets} Assets` : null),
+            badge: launcherStats.openItTickets && launcherStats.openItTickets > 0 ? `${launcherStats.openItTickets} Active Tickets` : (isItStaff && launcherStats.totalItAssets ? pluralize(launcherStats.totalItAssets, 'Asset', 'Assets') : null),
             badgeColor: launcherStats.openItTickets && launcherStats.openItTickets > 0 ? 'bg-amber-500' : 'bg-red-600',
             visible: true,
             icon: (
@@ -223,7 +228,7 @@ export default function Dashboard({
             badge: isSecurityUser && launcherStats.pendingRoomReturns && launcherStats.pendingRoomReturns > 0
                 ? `${launcherStats.pendingRoomReturns} Pending Return`
                 : launcherStats.myActiveRoomBorrowings && launcherStats.myActiveRoomBorrowings > 0
-                    ? `${launcherStats.myActiveRoomBorrowings} Key(s) Borrowed`
+                    ? pluralize(launcherStats.myActiveRoomBorrowings, 'Key Borrowed', 'Keys Borrowed')
                     : null,
             badgeColor: isSecurityUser && launcherStats.pendingRoomReturns && launcherStats.pendingRoomReturns > 0 ? 'bg-amber-500' : 'bg-emerald-600',
             visible: true,
@@ -797,7 +802,25 @@ export default function Dashboard({
             done: 0,
             overdue: 0,
         };
-        const upcomingTasks = employeeData?.upcomingTasks || [];
+        const allTasks = employeeData?.upcomingTasks || [];
+        const nowMs = new Date().getTime();
+
+        const lateTasks = allTasks.filter((t: any) => {
+            if (!t.deadline) return false;
+            return new Date(t.deadline).getTime() < nowMs && !isTaskCompleted(t.status);
+        });
+
+        const upcomingTasks = allTasks.filter((t: any) => {
+            if (!t.deadline) return false;
+            return new Date(t.deadline).getTime() >= nowMs;
+        });
+
+        const sortedLateTasks = sortTasksByDeadlineAndOverdue(lateTasks);
+        const sortedUpcomingTasks = sortTasksByDeadlineAndOverdue(upcomingTasks);
+
+        // Ensure Overdue stat card number matches the number of tasks in the Late group
+        const overdueCount = Math.max(tasksSummary.overdue || 0, lateTasks.length);
+
         const recentActivities = employeeData?.recentActivities || [];
         const projectProgress = supervisorData?.projectProgress || managerData?.projectProgress || [];
 
@@ -807,15 +830,15 @@ export default function Dashboard({
                 header={
                     <div className="flex items-center justify-between gap-3 min-w-0 w-full">
                         <div className="min-w-0">
-                            <div className="hidden sm:flex items-center gap-2 text-xs text-indigo-600 font-semibold mb-0.5">
-                                <Link href={route('dashboard')} className="hover:underline flex items-center gap-1">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold mb-0.5">
+                                <Link href={route('dashboard')} className="hover:text-[#E31B23] transition-colors flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
                                     Main Menu
                                 </Link>
                                 <span>/</span>
-                                <span className="text-gray-500 truncate">Task Management</span>
+                                <span className="text-slate-700 truncate">Task Management</span>
                             </div>
                             <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 leading-tight truncate">
                                 Task Management Workspace
@@ -830,16 +853,6 @@ export default function Dashboard({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
                                 <span>Create New Task</span>
-                            </Link>
-                            <Link
-                                href={route('dashboard')}
-                                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 transition-colors shrink-0"
-                                title="Back to Desk Launcher"
-                            >
-                                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                </svg>
-                                <span className="hidden sm:inline">Desk Launcher</span>
                             </Link>
                         </div>
                     </div>
@@ -870,75 +883,141 @@ export default function Dashboard({
                             <p className="text-2xl font-bold text-emerald-600 mt-1">{tasksSummary.done}</p>
                             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mt-2"></span>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
-                            <span className="text-xs text-slate-500 font-medium">Overdue</span>
-                            <p className="text-2xl font-bold text-[#E31B23] mt-1">{tasksSummary.overdue}</p>
-                            <span className="inline-block w-2 h-2 rounded-full bg-[#E31B23] mt-2"></span>
-                        </div>
+
+                        {/* Clickable Overdue Card */}
+                        <Link
+                            href={route('tasks.index', { filter: 'overdue' })}
+                            className="bg-white p-4 rounded-2xl border border-red-200/90 shadow-xs col-span-2 sm:col-span-1 hover:border-red-400 hover:shadow-md hover:-translate-y-0.5 transition-all group block select-none cursor-pointer"
+                            title="Klik untuk membuka daftar task yang terlambat"
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-red-700 font-bold group-hover:text-red-800 transition-colors">Overdue (Terlambat)</span>
+                                <span className="text-[10px] text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">Filter →</span>
+                            </div>
+                            <p className="text-2xl font-extrabold text-red-600 mt-1 tabular-nums">{overdueCount}</p>
+                            <span className="inline-block w-2 h-2 rounded-full bg-red-600 mt-2"></span>
+                        </Link>
                     </div>
 
-                    {/* Upcoming Deadlines & Recent Activities */}
+                    {/* Deadlines & Recent Activities */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Upcoming Deadlines */}
-                        <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-slate-900 text-sm">Upcoming Deadlines</h3>
-                                <Link href={route('tasks.index')} className="text-xs text-[#E31B23] font-semibold hover:underline">
-                                    View All →
-                                </Link>
+                        {/* Deadlines Section: Late vs Upcoming */}
+                        <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                    <span>Deadline Tasks</span>
+                                    {lateTasks.length > 0 && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-700 border border-red-200">
+                                            {lateTasks.length} Terlambat
+                                        </span>
+                                    )}
+                                </h3>
+                                <TextLink href={route('tasks.index')} arrow size="xs">
+                                    View All
+                                </TextLink>
                             </div>
-                            {upcomingTasks.length > 0 ? (
-                                <div className="space-y-3">
-                                    {upcomingTasks.map((task: any) => (
-                                        <Link
-                                            key={task.id}
-                                            href={route('tasks.show', task.id)}
-                                            className="p-3 rounded-xl bg-slate-50 hover:bg-red-50/50 transition-colors flex items-center justify-between gap-3 group border border-slate-100"
-                                        >
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-bold text-slate-900 group-hover:text-[#E31B23] truncate">
-                                                    {task.title}
-                                                </p>
-                                                <span className="text-[10px] text-slate-500">
-                                                    Status: {task.status} • Priority: {task.priority}
-                                                </span>
-                                            </div>
-                                            <span className="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg shrink-0">
-                                                {task.deadline ? new Date(task.deadline).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}
-                                            </span>
-                                        </Link>
-                                    ))}
+
+                            {/* Group 1: Terlambat (Late) */}
+                            {sortedLateTasks.length > 0 && (
+                                <div>
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-red-700 mb-2">
+                                        <svg className="w-3.5 h-3.5 text-red-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <span>Terlambat (Late)</span>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {sortedLateTasks.map((task: any) => (
+                                            <Link
+                                                key={task.id}
+                                                href={route('tasks.show', task.id)}
+                                                className="p-3 rounded-xl bg-red-50/40 hover:bg-red-50 transition-colors flex items-center justify-between gap-3 group border border-red-200/80 border-l-4 border-l-red-600"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-slate-900 group-hover:text-[#E31B23] truncate">
+                                                        {task.title}
+                                                    </p>
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                                        <span>Due: <strong className="text-red-700 font-bold">{formatDate(task.deadline)}</strong></span>
+                                                        <span>•</span>
+                                                        <span>Priority: {task.priority}</span>
+                                                    </div>
+                                                </div>
+                                                <DeadlineBadge dueDate={task.deadline} status={task.status} size="xs" />
+                                            </Link>
+                                        ))}
+                                    </div>
                                 </div>
-                            ) : (
-                                <p className="text-xs text-slate-500 text-center py-6">No tasks with upcoming deadlines.</p>
                             )}
+
+                            {/* Group 2: Akan Datang (Upcoming) */}
+                            <div>
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-2">
+                                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Akan Datang (Upcoming)</span>
+                                </div>
+                                {sortedUpcomingTasks.length > 0 ? (
+                                    <div className="space-y-2.5">
+                                        {sortedUpcomingTasks.map((task: any) => (
+                                            <Link
+                                                key={task.id}
+                                                href={route('tasks.show', task.id)}
+                                                className="p-3 rounded-xl bg-slate-50 hover:bg-slate-100/70 transition-colors flex items-center justify-between gap-3 group border border-slate-200/80"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-slate-900 group-hover:text-[#E31B23] truncate">
+                                                        {task.title}
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-500">
+                                                        Due: {formatDate(task.deadline)} • Priority: {task.priority}
+                                                    </span>
+                                                </div>
+                                                <DeadlineBadge dueDate={task.deadline} status={task.status} size="xs" />
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        Tidak ada task dengan deadline akan datang.
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Recent Activities */}
                         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-bold text-slate-900 text-sm">Recent Activities</h3>
-                                <span className="text-xs text-slate-400">Task Logs</span>
+                                <TextLink href={route('tasks.index')} variant="muted" size="xs">
+                                    Task Logs
+                                </TextLink>
                             </div>
                             {recentActivities.length > 0 ? (
                                 <div className="space-y-3">
-                                    {recentActivities.map((act: any) => (
-                                        <div key={act.id} className="flex items-start gap-3 text-xs">
-                                            <div className="w-2 h-2 rounded-full bg-[#E31B23] mt-1.5 shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-gray-800 font-medium truncate">
-                                                    {act.employee?.user?.name || 'User'} {act.activity_type} on{' '}
-                                                    <span className="font-bold">{act.task?.title || 'Task'}</span>
-                                                </p>
-                                                <span className="text-[10px] text-gray-400">
-                                                    {new Date(act.created_at).toLocaleDateString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
+                                    {recentActivities.map((act: any) => {
+                                        const sentence = formatActivitySentence(act);
+                                        return (
+                                            <div key={act.id} className="flex items-start gap-3 text-xs">
+                                                <div className="w-2 h-2 rounded-full bg-[#E31B23] mt-1.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-slate-700 leading-snug">
+                                                        <span className="font-bold text-slate-900">{sentence.userName}</span>{' '}
+                                                        <span className="font-medium text-slate-600">{sentence.verb}</span>{' '}
+                                                        task{' '}
+                                                        <span className="font-bold text-slate-900 italic">"{sentence.taskTitle}"</span>
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                                                        {formatDateTime(act.created_at)}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
-                                <p className="text-xs text-gray-500 text-center py-6">No recent task activity history.</p>
+                                <p className="text-xs text-slate-400 text-center py-6">Belum ada riwayat aktivitas tugas.</p>
                             )}
                         </div>
                     </div>
@@ -1268,10 +1347,10 @@ export default function Dashboard({
                         </div>
                     )}
                     {filteredApps.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 sm:gap-x-12 gap-y-8 sm:gap-y-12 place-items-center">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 sm:gap-x-12 gap-y-8 sm:gap-y-12 items-start justify-items-center">
                             {filteredApps.map((app) => {
                                 const CardContent = (
-                                    <div className="flex flex-col items-center group cursor-pointer focus:outline-none">
+                                    <div className="flex flex-col items-center group cursor-pointer focus:outline-none w-full">
                                         {/* Squircle App Icon */}
                                         <div className="relative">
                                             <div
@@ -1288,8 +1367,8 @@ export default function Dashboard({
                                             )}
                                         </div>
 
-                                        {/* App Title */}
-                                        <span className="mt-2.5 sm:mt-3 text-xs sm:text-[13px] font-semibold text-slate-700 group-hover:text-[#E31B23] text-center tracking-tight transition-colors line-clamp-2 max-w-[130px] sm:max-w-[120px] leading-snug">
+                                        {/* App Title with min 2-line height for aligned icon rows */}
+                                        <span className="mt-2.5 sm:mt-3 min-h-[2.5rem] flex items-start justify-center text-xs sm:text-[13px] font-semibold text-slate-700 group-hover:text-[#E31B23] text-center tracking-tight transition-colors line-clamp-2 max-w-[130px] sm:max-w-[120px] leading-snug">
                                             {app.name}
                                         </span>
                                     </div>

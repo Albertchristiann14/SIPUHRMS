@@ -5,6 +5,9 @@ import TaskDetailModal from '../Projects/TaskDetailModal';
 import CreateTaskModal from '@/Components/CreateTaskModal';
 import TaskViewSwitcher from '@/Components/TaskViewSwitcher';
 import PrimaryButton from '@/Components/PrimaryButton';
+import PageHeader from '@/Components/PageHeader';
+import DeadlineBadge from '@/Components/DeadlineBadge';
+import { getDeadlineStatus } from '@/Utils/deadline';
 
 import TaskRevisionModal from '@/Components/TaskRevisionModal';
 
@@ -42,6 +45,7 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
     const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(null);
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
     const [revisionModalTask, setRevisionModalTask] = useState<any>(null);
+    const [filterOverdue, setFilterOverdue] = useState(false);
     const isDraggingRef = useRef(false);
 
     // Keep localTasks in sync with Inertia tasks prop updates
@@ -68,7 +72,16 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
         if (params.get('create') === '1' || params.get('create') === 'true') {
             setShowCreateModal(true);
         }
+        if (params.get('filter') === 'overdue') {
+            setFilterOverdue(true);
+        }
     }, [localTasks]);
+
+    // Count overdue tasks
+    const overdueCount = (localTasks || []).filter((t: any) => {
+        const d = getDeadlineStatus(t.deadline, t.status, t.completed_at);
+        return Boolean(d?.isOverdue && !d?.isCompleted);
+    }).length;
 
     // Ensure drag state is cleared if drag ends anywhere on window
     useEffect(() => {
@@ -175,7 +188,14 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
             'Low': 4
         };
 
-        const filteredTasks = localTasks?.filter((t: any) => t.status === statusValue) || [];
+        const filteredTasks = (localTasks || []).filter((t: any) => {
+            if (t.status !== statusValue) return false;
+            if (filterOverdue) {
+                const d = getDeadlineStatus(t.deadline, t.status, t.completed_at);
+                return Boolean(d?.isOverdue && !d?.isCompleted);
+            }
+            return true;
+        });
         
         return filteredTasks.sort((a: any, b: any) => {
             const weightA = priorityWeight[a.priority] || 99;
@@ -190,26 +210,71 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h2 className="font-bold text-xl text-gray-900">My List</h2>
-                        <p className="text-sm text-gray-500 mt-0.5">Drag and drop task cards between columns to update status instantly</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <TaskViewSwitcher current="kanban" />
-                        <PrimaryButton onClick={() => setShowCreateModal(true)}>
-                            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Create Task
-                        </PrimaryButton>
-                    </div>
-                </div>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'Task Management', href: route('tasks.summary') },
+                        { label: 'My List' },
+                    ]}
+                    title="My List"
+                    subtitle="Pindahkan kartu antar kolom untuk memperbarui status pekerjaan secara langsung"
+                    actions={
+                        <div className="flex items-center gap-3">
+                            <TaskViewSwitcher current="kanban" />
+                            <PrimaryButton onClick={() => setShowCreateModal(true)}>
+                                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create Task
+                            </PrimaryButton>
+                        </div>
+                    }
+                />
             }
         >
             <Head title="My List" />
 
             <div className="mt-2">
+                {/* Filter and Status Toolbar */}
+                <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-xs">
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setFilterOverdue(false)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                !filterOverdue
+                                    ? 'bg-[#E31B23] text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                        >
+                            Semua Task ({localTasks.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setFilterOverdue(true)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                filterOverdue
+                                    ? 'bg-red-700 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-red-700 hover:bg-red-50'
+                            }`}
+                        >
+                            <span>Terlambat</span>
+                            {overdueCount > 0 && (
+                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                    filterOverdue ? 'bg-white text-red-700' : 'bg-red-100 text-red-700'
+                                }`}>
+                                    {overdueCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                    {filterOverdue && (
+                        <div className="text-xs text-red-600 font-medium flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                            Menampilkan task yang melewati batas waktu
+                        </div>
+                    )}
+                </div>
                 {/* Warning Toast */}
                 {warningMessage && (
                     <div className="mb-3 p-3 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold rounded-xl flex items-center justify-between shadow-xs">
@@ -300,7 +365,8 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
                                     {columnTasks.map((task: any) => {
                                         const isBeingDragged = draggedTaskId === task.id;
                                         const priority = priorityConfig[task.priority] || priorityConfig['Normal'];
-                                        const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'Done';
+                                        const deadlineInfo = getDeadlineStatus(task.deadline, task.status, task.completed_at);
+                                        const isLate = Boolean(deadlineInfo?.isOverdue && !deadlineInfo?.isCompleted);
                                         const assigneeNames = task.assignees?.map((a: any) => a.user?.name || 'Unknown') || [];
                                         
                                         return (
@@ -329,12 +395,14 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
                                                     isBeingDragged
                                                         ? 'opacity-30 scale-95 border-dashed border-2 border-red-400 bg-red-50/50 rotate-1 shadow-inner'
                                                         : 'hover:shadow-md hover:-translate-y-0.5 border-slate-200 hover:border-red-300'
-                                                } ${isOverdue && !isBeingDragged ? 'border-red-200 ring-1 ring-red-100' : ''}`}
+                                                } ${isLate && !isBeingDragged ? 'border-l-4 border-l-red-500 ring-1 ring-red-100 bg-red-50/10' : ''}`}
                                             >
                                                 <div className="p-3.5">
                                                     {/* Task Title + Drag Handle Icon */}
                                                     <div className="flex items-start justify-between gap-2 mb-1.5">
-                                                        <h4 className="font-semibold text-sm text-slate-900 leading-snug group-hover:text-[#E31B23] transition-colors">
+                                                        <h4 className={`font-semibold text-sm leading-snug group-hover:text-[#E31B23] transition-colors ${
+                                                            isLate ? 'text-red-950 font-bold' : 'text-slate-900'
+                                                        }`}>
                                                             {task.title}
                                                         </h4>
                                                         <span 
@@ -351,16 +419,16 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
                                                     <p className="text-[11px] text-slate-400 mb-2.5 truncate">{task.project?.name}</p>
 
                                                     {/* Priority + Deadline Row */}
-                                                    <div className="flex items-center justify-between mb-2.5">
+                                                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5">
                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${priority.bg} ${priority.text}`}>
                                                             {task.priority}
                                                         </span>
-                                                        {task.deadline && (
-                                                            <span className={`text-[10px] font-medium flex items-center gap-1 ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
-                                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                                {new Date(task.deadline).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                                                            </span>
-                                                        )}
+                                                        <DeadlineBadge 
+                                                            dueDate={task.deadline} 
+                                                            status={task.status} 
+                                                            completedAt={task.completed_at} 
+                                                            size="sm" 
+                                                        />
                                                     </div>
 
                                                     {/* Done / Waiting Approval Action Box */}

@@ -4,6 +4,8 @@ import { Head, useForm } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Badge from '@/Components/Badge';
+import PageHeader from '@/Components/PageHeader';
+import { formatDate } from '@/Utils/date';
 
 export default function DocumentIndex({ documents, auth, flash }: any) {
     const [showForm, setShowForm] = useState(false);
@@ -13,7 +15,7 @@ export default function DocumentIndex({ documents, auth, flash }: any) {
         file: null as File | null,
     });
 
-    const isHR = auth.user.roles?.some((r: any) => r.name === 'HRD / Admin' || r.name === 'General Manager');
+    const isHR = auth.user.roles?.some((r: any) => r.name === 'Super Admin' || r.name === 'HRD / Admin' || r.name === 'General Manager');
 
     const submit = (e: any) => {
         e.preventDefault();
@@ -38,22 +40,24 @@ export default function DocumentIndex({ documents, auth, flash }: any) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 className="font-bold text-xl text-slate-900 tracking-tight">Documents & SOP Management</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Archive of internal hotel regulations, standard operating procedures, and forms.</p>
-                    </div>
-                    {isHR && (
-                        <PrimaryButton 
-                            onClick={() => setShowForm(!showForm)}
-                        >
-                            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Main Menu', href: route('dashboard') },
+                        { label: 'Knowledge & Information' },
+                        { label: 'Documents & SOPs' },
+                    ]}
+                    title="Documents & SOP Management"
+                    subtitle="Arsip peraturan internal hotel, Standard Operating Procedure (SOP), dan formulir operasional."
+                    primaryAction={isHR ? {
+                        label: showForm ? 'Close Form' : 'Upload Document',
+                        icon: (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            {showForm ? 'Close Form' : 'Upload Document'}
-                        </PrimaryButton>
-                    )}
-                </div>
+                        ),
+                        onClick: () => setShowForm(!showForm),
+                    } : undefined}
+                />
             }
         >
             <Head title="Documents Management" />
@@ -126,41 +130,42 @@ export default function DocumentIndex({ documents, auth, flash }: any) {
                     )}
 
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50/80">
-                                <tr>
-                                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Document Title</th>
-                                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-                                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Uploaded By</th>
-                                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-slate-100">
-                                {documents.length > 0 ? (
-                                    documents.map((doc: any) => (
-                                        <tr key={doc.id} className="hover:bg-slate-50/75 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E31B23] flex items-center justify-center mr-3 shrink-0">
-                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50/80">
+                                    <tr>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Document Title</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Uploaded By</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                                        <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-100">
+                                    {documents.length > 0 ? (
+                                        documents.map((doc: any) => (
+                                            <tr key={doc.id} className="hover:bg-slate-50/75 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center">
+                                                        <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E31B23] flex items-center justify-center mr-3 shrink-0">
+                                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </div>
+                                                        <span className="text-sm font-semibold text-slate-900">{doc.title}</span>
                                                     </div>
-                                                    <span className="text-sm font-semibold text-slate-900">{doc.title}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <Badge variant={getTypeVariant(doc.type)}>
-                                                    {doc.type}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                {doc.uploader?.name || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 tabular-nums">
-                                                {new Date(doc.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            </td>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <Badge variant={getTypeVariant(doc.type)}>
+                                                        {doc.type}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                                    {doc.uploader?.name || '-'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 tabular-nums">
+                                                    {formatDate(doc.created_at)}
+                                                </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a 
                                                     href={route('documents.download', doc.id)}
@@ -192,6 +197,7 @@ export default function DocumentIndex({ documents, auth, flash }: any) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
-    );
+        </div>
+    </AuthenticatedLayout>
+);
 }
