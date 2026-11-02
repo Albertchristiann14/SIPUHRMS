@@ -71,7 +71,7 @@ export default function Index({ auth, tasks, employees, statuses, priorities, fi
                 <PageHeader
                     breadcrumbs={[
                         { label: 'Main Menu', href: route('dashboard') },
-                        { label: 'Task Management', href: route('tasks.summary') },
+                        { label: 'Task Management', href: route('dashboard', { view: 'tasks' }) },
                         { label: 'List Task' },
                     ]}
                     title="List Task"

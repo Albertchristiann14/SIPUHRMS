@@ -71,6 +71,12 @@ export default function OverviewTab({
         ? Math.round((summary.total_on_time / summary.total_clocked_in) * 100)
         : 100;
 
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
+
     return (
         <div className="space-y-6">
             {/* Filter Bar */}
@@ -118,7 +124,7 @@ export default function OverviewTab({
                             className="text-xs rounded-xl border-slate-200 py-1.5 px-3 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-800"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((d) => (
+                            {deptList.map((d: any) => (
                                 <option key={d.id} value={d.id}>{d.name}</option>
                             ))}
                         </select>

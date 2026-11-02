@@ -22,10 +22,11 @@ export default function EditProjectModal({
     show,
     onClose,
     project,
-    departments,
+    departments = [],
     employees,
     projectStatuses,
 }: EditProjectModalProps) {
+    const deptList = Array.isArray(departments) ? departments : Object.values(departments || {});
     const { data, setData, put, processing, errors, reset } = useForm({
         name: project?.name || '',
         description: project?.description || '',
@@ -153,7 +154,7 @@ export default function EditProjectModal({
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                                     >
                                         <option value="">Select Department</option>
-                                        {departments.map((dept) => (
+                                        {deptList.map((dept: any) => (
                                             <option key={dept.id} value={dept.id}>
                                                 {dept.name}
                                             </option>

@@ -5,6 +5,12 @@ import { PageProps } from '@/types';
 import Badge from '@/Components/Badge';
 
 export default function EmployeesIndex({ auth, employees, departments = [], filters = {} }: PageProps<{ employees: any, departments: any[], filters: any }>) {
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
+
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         router.get(route('employees.index'), { ...filters, search: e.target.value }, { preserveState: true, replace: true });
     };
@@ -71,7 +77,7 @@ export default function EmployeesIndex({ auth, employees, departments = [], filt
                             className="text-xs border-slate-300 rounded-xl shadow-xs py-2 px-3 focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-900"
                         >
                             <option value="">All Departments</option>
-                            {(departments || []).map((d: any) => (
+                            {deptList.map((d: any) => (
                                 <option key={d.id} value={d.id}>{d.name}</option>
                             ))}
                         </select>

@@ -52,6 +52,12 @@ export default function AttendanceDataTab({
         });
     };
 
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
+
     return (
         <div className="space-y-4">
             {/* Filter & Action Controls Bar */}
@@ -87,7 +93,7 @@ export default function AttendanceDataTab({
                             className="text-xs rounded-xl border-slate-200 py-2 px-3 focus:ring-[#E31B23] focus:border-[#E31B23] text-slate-700 shadow-2xs"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((d) => (
+                            {deptList.map((d: any) => (
                                 <option key={d.id} value={d.id}>{d.name}</option>
                             ))}
                         </select>

@@ -24,6 +24,11 @@ export default function DirectoryIndex({ employees = [], departments = [], filte
     };
 
     const employeeList = Array.isArray(employees) ? employees : (employees?.data || []);
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
 
     return (
         <AuthenticatedLayout
@@ -55,7 +60,7 @@ export default function DirectoryIndex({ employees = [], departments = [], filte
                                 onChange={handleDepartmentChange}
                             >
                                 <option value="">All Departments</option>
-                                {(departments || []).map((dept: any) => (
+                                {deptList.map((dept: any) => (
                                     <option key={dept.id} value={dept.id}>{dept.name}</option>
                                 ))}
                             </select>

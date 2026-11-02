@@ -3,7 +3,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
 
-export default function Create({ auth, employees, departments }: PageProps<{ employees: any[], departments: any[] }>) {
+export default function Create({ auth, employees, departments = [] }: PageProps<{ employees: any[], departments: any[] }>) {
+    const deptList = Array.isArray(departments) ? departments : Object.values(departments || {});
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
@@ -61,7 +62,7 @@ export default function Create({ auth, employees, departments }: PageProps<{ emp
                                         className="block w-full rounded-xl border-slate-300 shadow-xs focus:border-[#E31B23] focus:ring-[#E31B23] text-sm"
                                     >
                                         <option value="">Select Department</option>
-                                        {departments.map(dept => (
+                                        {deptList.map((dept: any) => (
                                             <option key={dept.id} value={dept.id}>{dept.name}</option>
                                         ))}
                                     </select>

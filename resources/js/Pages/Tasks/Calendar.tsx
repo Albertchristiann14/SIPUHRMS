@@ -403,7 +403,7 @@ export default function Calendar({
                 <PageHeader
                     breadcrumbs={[
                         { label: 'Main Menu', href: route('dashboard') },
-                        { label: 'Task Management', href: route('tasks.summary') },
+                        { label: 'Task Management', href: route('dashboard', { view: 'tasks' }) },
                         { label: 'Team Calendar' },
                     ]}
                     title="Team Calendar"

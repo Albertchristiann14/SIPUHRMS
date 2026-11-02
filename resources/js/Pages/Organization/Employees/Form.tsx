@@ -15,6 +15,9 @@ export default function EmployeeForm({ auth, employee, currentRole, departments,
     suggestedEmployeeNumber?: string,
 }>) {
     const isEditing = !!employee;
+    const deptList = Array.isArray(departments) ? departments : Object.values(departments || {});
+    const posList = Array.isArray(positions) ? positions : Object.values(positions || {});
+    const supList = Array.isArray(supervisors) ? supervisors : Object.values(supervisors || {});
 
     const { data, setData, post, put, processing, errors } = useForm({
         name: employee?.user?.name || '',
@@ -107,21 +110,21 @@ export default function EmployeeForm({ auth, employee, currentRole, departments,
                                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Department</label>
                                         <select value={data.department_id} onChange={e => setData('department_id', e.target.value)} className="mt-1 block w-full border-slate-300 rounded-xl shadow-xs text-sm focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23]">
                                             <option value="">-- Select Department --</option>
-                                            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                            {deptList.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Position</label>
                                         <select value={data.position_id} onChange={e => setData('position_id', e.target.value)} className="mt-1 block w-full border-slate-300 rounded-xl shadow-xs text-sm focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23]">
                                             <option value="">-- Select Position --</option>
-                                            {positions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            {posList.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Supervisor</label>
                                         <select value={data.supervisor_id} onChange={e => setData('supervisor_id', e.target.value)} className="mt-1 block w-full border-slate-300 rounded-xl shadow-xs text-sm focus:ring-1 focus:ring-[#E31B23] focus:border-[#E31B23]">
                                             <option value="">-- No Supervisor --</option>
-                                            {supervisors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                            {supList.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     </div>
                                     <div>

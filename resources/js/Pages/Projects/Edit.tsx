@@ -22,9 +22,10 @@ export default function Edit({
     auth,
     project,
     employees,
-    departments,
+    departments = [],
     projectStatuses,
 }: EditProps) {
+    const deptList = Array.isArray(departments) ? departments : Object.values(departments || {});
     const { data, setData, put, processing, errors } = useForm({
         name: project?.name || '',
         description: project?.description || '',
@@ -119,7 +120,7 @@ export default function Edit({
                                         className="w-full rounded-xl border-slate-300 shadow-xs focus:border-[#E31B23] focus:ring-[#E31B23] text-sm"
                                     >
                                         <option value="">Select Department</option>
-                                        {departments.map((dept) => (
+                                        {deptList.map((dept: any) => (
                                             <option key={dept.id} value={dept.id}>
                                                 {dept.name}
                                             </option>

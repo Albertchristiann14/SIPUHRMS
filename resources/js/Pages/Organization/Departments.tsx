@@ -6,7 +6,13 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Badge from '@/Components/Badge';
 
-export default function Departments({ auth, departments }: PageProps<{ departments: any[] }>) {
+export default function Departments({ auth, departments = [] }: PageProps<{ departments: any[] }>) {
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
+
     const [showModal, setShowModal] = useState(false);
     const [editingDept, setEditingDept] = useState<any>(null);
 
@@ -79,7 +85,7 @@ export default function Departments({ auth, departments }: PageProps<{ departmen
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-slate-100">
-                                    {departments.map((dept) => (
+                                    {deptList.map((dept: any) => (
                                         <tr key={dept.id} className="hover:bg-slate-50/60 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">{dept.name}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{dept.description || '-'}</td>
@@ -94,7 +100,7 @@ export default function Departments({ auth, departments }: PageProps<{ departmen
                                             </td>
                                         </tr>
                                     ))}
-                                    {departments.length === 0 && (
+                                    {deptList.length === 0 && (
                                         <tr><td colSpan={4} className="px-6 py-8 text-center text-sm text-slate-400">No departments found.</td></tr>
                                     )}
                                 </tbody>

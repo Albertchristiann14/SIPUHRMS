@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 
 export default function AssigneeSelect({ 
-    employees, 
-    selectedIds, 
+    employees = [], 
+    selectedIds = [], 
     onChange 
 }: { 
     employees: any[], 
@@ -14,7 +14,7 @@ export default function AssigneeSelect({
     // Extract unique departments
     const departments = useMemo(() => {
         const deps = new Set<string>();
-        employees.forEach(emp => {
+        (employees || []).forEach(emp => {
             if (emp.department?.name) {
                 deps.add(emp.department.name);
             }

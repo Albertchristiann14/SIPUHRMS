@@ -213,7 +213,7 @@ export default function Kanban({ auth, tasks, statuses, priorities, employees, p
                 <PageHeader
                     breadcrumbs={[
                         { label: 'Main Menu', href: route('dashboard') },
-                        { label: 'Task Management', href: route('tasks.summary') },
+                        { label: 'Task Management', href: route('dashboard', { view: 'tasks' }) },
                         { label: 'My List' },
                     ]}
                     title="My List"

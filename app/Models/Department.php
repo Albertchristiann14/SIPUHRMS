@@ -23,9 +23,7 @@ class Department extends Model
 
     public static function getCachedList()
     {
-        return \Illuminate\Support\Facades\Cache::remember('departments_cached_list', 3600, function () {
-            return static::select('id', 'name')->orderBy('name')->get();
-        });
+        return static::select('id', 'name')->orderBy('name')->get();
     }
 
     public static function clearCache(): void

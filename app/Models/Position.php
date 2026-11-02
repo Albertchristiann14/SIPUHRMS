@@ -23,9 +23,7 @@ class Position extends Model
 
     public static function getCachedList()
     {
-        return \Illuminate\Support\Facades\Cache::remember('positions_cached_list', 3600, function () {
-            return static::select('id', 'name', 'department_id')->orderBy('name')->get();
-        });
+        return static::select('id', 'name', 'department_id')->orderBy('name')->get();
     }
 
     public static function clearCache(): void

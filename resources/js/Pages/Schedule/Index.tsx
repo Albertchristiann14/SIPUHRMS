@@ -71,6 +71,12 @@ export default function ScheduleIndex({
 }: Props) {
     const { flash, errors: pageErrors } = usePage().props as any;
 
+    const deptList = Array.isArray(departments) 
+        ? departments 
+        : (departments && typeof departments === 'object' && Array.isArray((departments as any).data) 
+            ? (departments as any).data 
+            : Object.values(departments || {}));
+
     // Filter and search state
     const [searchQuery, setSearchQuery] = useState('');
     const [activeDeptFilter, setActiveDeptFilter] = useState<string>(
@@ -579,8 +585,8 @@ export default function ScheduleIndex({
                                     onChange={(e) => handleDepartmentChange(e.target.value)}
                                     className="w-full rounded-xl border-slate-300 text-xs text-slate-900 shadow-2xs focus:border-[#E31B23] focus:ring-1 focus:ring-[#E31B23] py-2 px-3 font-medium"
                                 >
-                                    <option value="">All Departments ({departments.length})</option>
-                                    {departments.map((dept) => (
+                                    <option value="">All Departments ({deptList.length})</option>
+                                    {deptList.map((dept: any) => (
                                         <option key={dept.id} value={dept.id}>
                                             {dept.name}
                                         </option>
@@ -1106,7 +1112,7 @@ export default function ScheduleIndex({
                                         className="rounded-lg border-slate-300 text-xs py-1 px-2.5 font-medium shadow-2xs"
                                     >
                                         <option value="">All Departments</option>
-                                        {departments.map((d) => (
+                                        {deptList.map((d: any) => (
                                             <option key={d.id} value={d.id}>{d.name}</option>
                                         ))}
                                     </select>
@@ -1281,8 +1287,8 @@ export default function ScheduleIndex({
                                 onChange={(e) => setCopyDeptId(e.target.value)}
                                 className="mt-1 block w-full rounded-xl border-slate-300 text-xs text-slate-900 shadow-2xs focus:border-[#E31B23] focus:ring-1 focus:ring-[#E31B23] py-2.5 px-3"
                             >
-                                <option value="">All Departments ({departments.length})</option>
-                                {departments.map((dept) => (
+                                <option value="">All Departments ({deptList.length})</option>
+                                {deptList.map((dept: any) => (
                                     <option key={dept.id} value={dept.id}>
                                         {dept.name}
                                     </option>
